@@ -82,22 +82,22 @@ The platform uses:
 
 ---
 
-## 🤖 AI Features
+## 🤖 AI Features & Machine Learning Algorithms
 
-### 🌱 RaithaMitra AI
-An AI-assisted agricultural advisor that helps users with topics such as:
-- Crop care
-- Soil
-- Fertilizers
-- Pest management
-- Organic farming
-- Agricultural guidance
+### 🧠 1. Multi-Factor Weighted Scoring Algorithm (Worker Matching)
+Intelligent decision-support scoring engine that evaluates and ranks worker suitability using:
+- **Jaccard Skill Similarity**: Calculates skill overlap between job requirements and worker profile capabilities.
+- **Spatial Distance Decay ($e^{-\lambda d}$)**: Applies exponential distance decay based on Haversine spherical distance calculations between farmer location and worker location.
+- **Min-Max Rating Normalization**: Normalizes worker user ratings ($R / 5.0$).
+- **Experience & Availability Weighting**: Logarithmic scaling of work experience/completed job count and binary availability filtering.
 
-### 🧠 Intelligent Worker Matching
-The matching system considers multiple factors including skills, location, rating, availability, and experience to recommend suitable workers.
+### 💰 2. Task & Region-Based Wage Benchmark Estimator
+Algorithm-assisted labor wage benchmark estimator evaluating crop task complexity (harvesting, tilling, spraying), work duration, and regional Karnataka wage standards.
 
-### 💰 Wage Estimation
-Provides algorithm-assisted agricultural labor wage estimates based on relevant task and regional factors.
+### 🌱 3. RaithaMitra Multimodal AI Assistant (Google Gemini API)
+Interactive AI advisor powered by **Google Gemini LLM (`gemini-1.5-flash`)**:
+- Provides real-time guidance on crop care, soil health, fertilizers, pest control, organic farming, and weather advice.
+- **Multimodal Computer Vision**: Accepts leaf/crop photo uploads to analyze and diagnose crop diseases.
 
 ---
 
@@ -108,9 +108,9 @@ Provides algorithm-assisted agricultural labor wage estimates based on relevant 
 | 🎨 **Frontend** | React, Vite, Tailwind CSS, Context API, Lucide Icons |
 | ⚙️ **Backend** | Node.js, Express.js |
 | 🗄️ **Database** | MongoDB, Mongoose, MongoDB Atlas |
-| 🤖 **AI** | Google Gemini API, Recommendation Logic |
+| 🤖 **AI & ML Algorithms** | **Google Gemini LLM** (`gemini-1.5-flash`), **Multi-Factor Weighted Scoring Algorithm** (Jaccard Similarity, Exponential Distance Decay $e^{-\lambda d}$, Min-Max Normalization), **Wage Benchmark Estimator** |
 | 🔐 **Authentication** | JWT, bcrypt |
-| ☁️ **Deployment** | Render, MongoDB Atlas |
+| ☁️ **Deployment** | Render (Web Service & Static Site), MongoDB Atlas |
 
 ---
 
