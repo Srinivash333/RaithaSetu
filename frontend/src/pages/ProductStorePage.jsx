@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Store, Truck, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE } from '../services/api';
 
 export default function ProductStorePage() {
   const { t } = useLanguage();
@@ -15,7 +16,7 @@ export default function ProductStorePage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`/api/products?category=${selectedCat}`);
+      const res = await fetch(`${API_BASE}/products?category=${selectedCat}`);
       const data = await res.json();
       if (data.success) setProducts(data.products);
     } catch (err) {

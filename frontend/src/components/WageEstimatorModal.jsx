@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, Sparkles, X, Check, Users, MapPin, Star, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { API_BASE } from '../services/api';
 
 export default function WageEstimatorModal({ isOpen, onClose }) {
   const { t } = useLanguage();
@@ -25,7 +26,7 @@ export default function WageEstimatorModal({ isOpen, onClose }) {
   const handleEstimate = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/recommendations/wages/estimate', {
+      const res = await fetch(`${API_BASE}/recommendations/wages/estimate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ crop, workType, duration })

@@ -8,7 +8,7 @@ import FilterPanel from '../components/FilterPanel';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
 import NegotiationModal from '../components/NegotiationModal';
-import { api } from '../services/api';
+import { api, API_BASE } from '../services/api';
 import { getPresetCropImage } from '../utils/cropTranslations';
 import { 
   ShoppingBag, CheckCircle, Store, Building2, MapPin, 
@@ -171,7 +171,7 @@ export default function TraderDashboard() {
     if (!reviewTargetId || !reviewTransactionId) return;
     setSubmittingReview(true);
     try {
-      const res = await fetch('/api/reviews', {
+      const res = await fetch(`${API_BASE}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

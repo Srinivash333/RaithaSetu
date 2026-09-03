@@ -3,6 +3,7 @@ import { useLocation } from '../context/LocationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { MapPin, Search, Briefcase, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE } from '../services/api';
 
 export default function JobSearchPage() {
   const { t } = useLanguage();
@@ -18,7 +19,7 @@ export default function JobSearchPage() {
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch(`/api/jobs?crop=${searchCrop}&maxDistanceKm=${maxDistanceKm}&latitude=${coords.latitude}&longitude=${coords.longitude}`);
+      const res = await fetch(`${API_BASE}/jobs?crop=${searchCrop}&maxDistanceKm=${maxDistanceKm}&latitude=${coords.latitude}&longitude=${coords.longitude}`);
       const data = await res.json();
       if (data.success) setJobs(data.jobs);
     } catch (err) {

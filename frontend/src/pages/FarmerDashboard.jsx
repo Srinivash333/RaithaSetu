@@ -16,7 +16,7 @@ import CropQuestionModal from '../components/CropQuestionModal';
 import TraderShopModal from '../components/TraderShopModal';
 import CropOfferModal from '../components/CropOfferModal';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, API_BASE } from '../services/api';
 import { getStoreImage, handleStoreImageError } from '../utils/storeImages';
 import { getMatchExplanation, translateCrop, getPresetCropImage } from '../utils/cropTranslations';
 import { 
@@ -161,7 +161,7 @@ export default function FarmerDashboard() {
 
   const fetchFarmerCropsAndNegotiations = async () => {
     try {
-      const resCrops = await fetch('/api/crops/my-listings', {
+      const resCrops = await fetch(`${API_BASE}/crops/my-listings`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dataCrops = await resCrops.json();
@@ -414,7 +414,7 @@ export default function FarmerDashboard() {
     if (!reviewTargetId || !reviewTransactionId) return;
     setSubmittingReview(true);
     try {
-      const res = await fetch('/api/reviews', {
+      const res = await fetch(`${API_BASE}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
