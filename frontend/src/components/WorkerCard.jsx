@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import Rating from './Rating';
-import { MapPin, Sparkles, CheckCircle, Phone, MessageSquare, Send, User, ShieldCheck } from 'lucide-react';
+import { MapPin, Sparkles, Phone, MessageSquare, ShieldCheck, MessageCircle } from 'lucide-react';
+import { getDisplayPhone, generateWorkerWhatsAppMessage, openWhatsAppChat } from '../utils/whatsappUtils';
 
 export default function WorkerCard({
   worker,
@@ -10,14 +11,17 @@ export default function WorkerCard({
   distanceKm = 2.4,
   breakdown = {},
   explanation = '',
+  job = null,
   onAskQuestion,
   onSendOffer,
   offerSent = false
 }) {
   const { t } = useLanguage();
   const name = worker?.name || 'Agricultural Worker';
-  const phone = worker?.phone || worker?.mobileNumber || '+91 9845012345';
-  const rating = profile?.ratingAverage || 4.8;
+  const rawPhone = worker?.phone || worker?.mobileNumber || worker?.userId?.phone || worker?.userId?.mobileNumber || profile?.userId?.phone || profile?.contactNumber;
+  const displayPhone = rawPhone ? getDisplayPhone(rawPhone) : '';
+
+  const rating = profile?.ratingAverage || 4.5;
   const ratingCount = profile?.ratingCount || 12;
   const isAvailable = profile?.isAvailable !== false;
   const skills = profile?.skills?.length ? profile.skills : ['Harvesting', 'Pesticide Spraying'];
@@ -27,11 +31,35 @@ export default function WorkerCard({
 
   const [imgErr, setImgErr] = useState(false);
 
+  const handleSendOfferClick = () => {
+    const offeredWage = job?.wage || 750;
+    const durationUnit = job?.duration?.toLowerCase() || 'day';
+    const cropName = job?.crop || 'Paddy';
+    const workTask = job?.workType || job?.title || 'Harvesting';
+
+    if (rawPhone) {
+      const message = generateWorkerWhatsAppMessage({
+        workerName: name,
+        offeredWage,
+        durationUnit,
+        crop: cropName,
+        workTask
+      });
+      openWhatsAppChat(rawPhone, message);
+    } else {
+      alert('Phone number not available');
+    }
+
+    if (onSendOffer) {
+      onSendOffer(worker);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-agri-200 p-5 shadow-sm hover:shadow-md transition space-y-4 relative overflow-hidden flex flex-col justify-between">
       
       <div className="space-y-3">
-        {/* HEADER: AVATAR, NAME, RATING & MATCH BADGE */}
+        {/* HEADER: AVATAR, NAME, RATING, PHONE & MATCH BADGE */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-agri-100 border border-agri-200 shrink-0 relative">
@@ -51,14 +79,32 @@ export default function WorkerCard({
 
             <div>
               <h4 className="font-extrabold text-sm text-gray-900 leading-snug">{name}</h4>
-              <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500 mt-0.5">
+              
+              <div className="flex items-center space-x-1.5 text-xs text-gray-500 mt-0.5">
                 <Rating value={rating} />
-                <span className="text-[11px]">({ratingCount})</span>
+                <span className="text-[11px] font-semibold">({ratingCount})</span>
                 <span>•</span>
-                <span className="flex items-center text-agri-700 font-semibold text-[11px]">
-                  <MapPin className="w-3 h-3 mr-0.5 shrink-0" />
-                  {distanceKm !== undefined ? `${distanceKm} ${t('recCard.away')}` : t('location.unavailable')}
-                </span>
+              </div>
+
+              {displayPhone ? (
+                <div className="pt-0.5">
+                  <div className="text-xs font-black text-gray-900 flex items-center space-x-1">
+                    <Phone className="w-3 h-3 text-agri-700 shrink-0" />
+                    <span>{displayPhone}</span>
+                  </div>
+                  <span className="text-[9px] text-gray-400 font-medium block">
+                    Registered Mobile Number
+                  </span>
+                </div>
+              ) : (
+                <div className="pt-0.5">
+                  <span className="text-[11px] font-bold text-red-500">Phone number not available</span>
+                </div>
+              )}
+
+              <div className="flex items-center text-agri-700 font-semibold text-[11px] mt-1">
+                <MapPin className="w-3 h-3 mr-0.5 shrink-0" />
+                <span>{distanceKm !== undefined ? `${distanceKm} ${t('recCard.away')}` : t('location.unavailable')}</span>
               </div>
             </div>
           </div>
@@ -101,50 +147,48 @@ export default function WorkerCard({
 
           <div>
             <span className="text-[10px] text-gray-400 font-bold uppercase block">Availability</span>
-            <span className="text-emerald-700 font-bold uppercase text-[10px]">● {isAvailable ? 'Available Now' : 'Busy'}</span>
+            <span className="text-emerald-700 font-bold uppercase text-[10px]">● {isAvailable ? 'AVAILABLE NOW' : 'BUSY'}</span>
           </div>
         </div>
       </div>
 
-      {/* ACTION BUTTONS */}
-      <div className="pt-3 border-t border-agri-100 grid grid-cols-3 gap-2">
-        {/* ASK QUESTION */}
-        {onAskQuestion && (
-          <button
-            type="button"
-            onClick={() => onAskQuestion(worker)}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-slate-700" />
-            <span className="truncate">{t('workforce.askQuestion')}</span>
-          </button>
-        )}
+      {/* ACTION BUTTONS & FOOTNOTE */}
+      <div className="pt-3 border-t border-agri-100 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {/* ASK QUESTION */}
+          {onAskQuestion && (
+            <button
+              type="button"
+              onClick={() => onAskQuestion(worker)}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center space-x-1.5"
+            >
+              <MessageSquare className="w-4 h-4 text-slate-700 shrink-0" />
+              <span>{t('workforce.askQuestion')}</span>
+            </button>
+          )}
 
-        {/* CONTACT WORKER */}
-        <a
-          href={`tel:${phone}`}
-          className="bg-slate-900 hover:bg-black text-white font-bold py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1 shadow-sm"
-        >
-          <Phone className="w-3.5 h-3.5" />
-          <span className="truncate">{t('workforce.contactWorker')}</span>
-        </a>
+          {/* SEND JOB OFFER VIA WHATSAPP */}
+          {onSendOffer && (
+            <button
+              type="button"
+              disabled={offerSent}
+              onClick={handleSendOfferClick}
+              className={`font-black py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-sm ${
+                offerSent
+                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 cursor-default'
+                  : 'bg-emerald-800 hover:bg-emerald-900 text-white'
+              }`}
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-300 fill-current shrink-0" />
+              <span>{offerSent ? t('workforce.offerSent') : 'Send Job Offer via WhatsApp'}</span>
+            </button>
+          )}
+        </div>
 
-        {/* SEND OFFER */}
-        {onSendOffer && (
-          <button
-            type="button"
-            disabled={offerSent}
-            onClick={() => onSendOffer(worker)}
-            className={`font-black py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1 shadow-sm ${
-              offerSent
-                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 cursor-default'
-                : 'bg-emerald-700 hover:bg-emerald-800 text-white'
-            }`}
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span className="truncate">{offerSent ? t('workforce.offerSent') : t('workforce.sendOffer')}</span>
-          </button>
-        )}
+        <div className="text-[10px] text-gray-400 font-medium flex items-center justify-center space-x-1 pt-0.5">
+          <ShieldCheck className="w-3 h-3 text-gray-400 shrink-0" />
+          <span>Opens WhatsApp with a pre-filled job offer message to this worker.</span>
+        </div>
       </div>
 
     </div>

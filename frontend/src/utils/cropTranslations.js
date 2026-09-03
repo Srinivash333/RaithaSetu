@@ -117,3 +117,16 @@ export function getMatchExplanation(traderName, cropName, qty, unit, distanceKm,
 
   return `"${traderName} is looking for ${cropName}, accepts the available quantity (${qty} ${unit}), and is located ${dist} km from your farm."`;
 }
+
+export function getPresetCropImage(cropName = '') {
+  const name = (cropName || '').toString().toLowerCase();
+  if (name.includes('potato')) return 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('tomato')) return 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('paddy') || name.includes('rice')) return 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('sugarcane')) return 'https://images.unsplash.com/photo-1594951478522-a9b8304033ec?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('cotton')) return 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('coffee')) return 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('arecanut')) return 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=300&q=80';
+  if (name.includes('maize') || name.includes('corn')) return 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80';
+  return 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=300&q=80';
+}

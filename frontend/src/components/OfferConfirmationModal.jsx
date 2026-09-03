@@ -3,6 +3,7 @@ import Modal from './Modal';
 import Button from './Button';
 import { useLanguage } from '../context/LanguageContext';
 import { Send, User, Briefcase, MapPin, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react';
+import { generateWorkerWhatsAppMessage, openWhatsAppChat } from '../utils/whatsappUtils';
 
 export default function OfferConfirmationModal({
   isOpen,
@@ -21,6 +22,29 @@ export default function OfferConfirmationModal({
   const jobTitle = job.title || 'Agricultural Job';
   const wageText = `₹${job.wage} / ${job.duration?.toLowerCase() || 'day'}`;
   const locationText = job.locationName || 'Farm Location';
+
+  const handleConfirm = () => {
+    const rawPhone = worker?.phone || worker?.mobileNumber || worker?.userId?.phone || worker?.userId?.mobileNumber;
+    const offeredWage = job?.wage || 750;
+    const durationUnit = job?.duration?.toLowerCase() || 'day';
+    const cropName = job?.crop || 'Paddy';
+    const workTask = job?.workType || job?.title || 'Harvesting';
+
+    if (rawPhone) {
+      const waMsg = generateWorkerWhatsAppMessage({
+        workerName,
+        offeredWage,
+        durationUnit,
+        crop: cropName,
+        workTask
+      });
+      openWhatsAppChat(rawPhone, waMsg);
+    }
+
+    if (onConfirmOffer) {
+      onConfirmOffer();
+    }
+  };
 
   return (
     <Modal
@@ -93,7 +117,7 @@ export default function OfferConfirmationModal({
             type="button"
             variant="primary"
             loading={sending}
-            onClick={onConfirmOffer}
+            onClick={handleConfirm}
             className="flex-1 font-black text-xs bg-emerald-700 hover:bg-emerald-800 text-white"
           >
             <Send className="w-4 h-4 mr-1" />

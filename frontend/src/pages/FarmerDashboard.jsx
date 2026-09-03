@@ -18,7 +18,7 @@ import CropOfferModal from '../components/CropOfferModal';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { getStoreImage, handleStoreImageError } from '../utils/storeImages';
-import { getMatchExplanation, translateCrop } from '../utils/cropTranslations';
+import { getMatchExplanation, translateCrop, getPresetCropImage } from '../utils/cropTranslations';
 import { 
   PlusCircle, Sparkles, AlertCircle, Scale, MessageSquare, 
   ShoppingBag, Store, Truck, Clock, CheckCircle, Star, Building2, Send, Users
@@ -80,6 +80,7 @@ export default function FarmerDashboard() {
   const [harvestDate, setHarvestDate] = useState(new Date().toISOString().split('T')[0]);
   const [locationName, setLocationName] = useState(user?.address || 'Mandya East Farm');
   const [cropDescription, setCropDescription] = useState('Freshly harvested organic hybrid red tomatoes.');
+  const [cropImageUrl, setCropImageUrl] = useState('');
   const [targetTraders, setTargetTraders] = useState([]);
   const [postingCrop, setPostingCrop] = useState(false);
 
@@ -241,6 +242,7 @@ export default function FarmerDashboard() {
         harvestDate,
         locationName: locationName.trim(),
         description: cropDescription.trim(),
+        imageUrl: cropImageUrl.trim() || getPresetCropImage(cropName),
         latitude: coords?.latitude || 12.9716,
         longitude: coords?.longitude || 77.5946,
         targetTraderIds: targetTraders
@@ -249,6 +251,7 @@ export default function FarmerDashboard() {
       if (data && data.success) {
         setShowCropModal(false);
         setStatusSuccessMsg('Crop listing posted successfully!');
+        setCropImageUrl('');
         fetchFarmerCropsAndNegotiations();
         setTimeout(() => setStatusSuccessMsg(''), 4000);
       }
@@ -627,6 +630,7 @@ export default function FarmerDashboard() {
                         distanceKm={rec.distanceKm}
                         breakdown={rec.breakdown}
                         explanation={rec.explanation}
+                        job={activeJobForRec}
                         onAskQuestion={handleOpenChat}
                         onSendOffer={handleOpenOfferModal}
                         offerSent={isOfferAlreadySent}
@@ -753,6 +757,7 @@ export default function FarmerDashboard() {
                     const remainingQty = (c.quantity || 0) - (c.soldQuantity || 0);
                     const isSold = c.status === 'sold' || remainingQty <= 0;
                     const isSelected = selectedCropForMatching?._id === c._id;
+                    const cropImg = c.imageUrl || getPresetCropImage(c.cropName);
 
                     return (
                       <div
@@ -762,18 +767,31 @@ export default function FarmerDashboard() {
                           isSelected ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-500/20' : 'bg-agri-50/70 border-agri-200 hover:border-agri-300'
                         }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-                              isSold ? 'bg-red-500 text-white' : 'bg-emerald-600 text-white'
-                            }`}>
-                              {isSold ? (t('common.soldOut') || 'SOLD OUT') : (t('common.available') || 'AVAILABLE')}
-                            </span>
-                            <h4 className="font-black text-sm text-gray-900 mt-1">{c.cropName}</h4>
-                            <p className="text-[11px] text-gray-500">Variety: {c.variety || 'Standard'}</p>
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex items-center space-x-3">
+                            {/* CROP THUMBNAIL IMAGE */}
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-emerald-100 border border-emerald-200 shrink-0 relative shadow-xs">
+                              <img
+                                src={cropImg}
+                                alt={c.cropName}
+                                onError={(e) => { e.target.src = getPresetCropImage(c.cropName); }}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+
+                            <div>
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                                isSold ? 'bg-red-500 text-white' : 'bg-emerald-600 text-white'
+                              }`}>
+                                {isSold ? (t('common.soldOut') || 'SOLD OUT') : (t('common.available') || 'AVAILABLE')}
+                              </span>
+                              <h4 className="font-black text-sm text-gray-900 mt-1">{c.cropName}</h4>
+                              <p className="text-[11px] text-gray-500">Variety: {c.variety || 'Standard'}</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <span className="font-black text-emerald-800 text-sm">₹{c.expectedPricePerUnit} / {c.unit}</span>
+
+                          <div className="text-right shrink-0">
+                            <span className="font-black text-emerald-800 text-sm block">₹{c.expectedPricePerUnit} / {c.unit}</span>
                             <span className="text-[10px] text-gray-500 block">{remainingQty} / {c.quantity} {c.unit}s remaining</span>
                           </div>
                         </div>
@@ -1072,6 +1090,44 @@ export default function FarmerDashboard() {
                   placeholder="Farm location"
                   className="w-full border border-gray-300 rounded-xl p-2.5 font-semibold"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-gray-700 mb-1">Crop Image URL / Photo (Optional)</label>
+              <input
+                type="url"
+                value={cropImageUrl}
+                onChange={(e) => setCropImageUrl(e.target.value)}
+                placeholder="e.g. https://images.unsplash.com/... (Or pick photo preset below)"
+                className="w-full border border-gray-300 rounded-xl p-2.5 font-medium text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+              
+              {/* PRESET CROP PHOTO PICKER */}
+              <div className="mt-2 space-y-1">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Or Pick a Quick Crop Photo Preset:</span>
+                <div className="flex space-x-2 overflow-x-auto pb-1 pt-0.5">
+                  {[
+                    { name: 'Tomatoes', url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Potato', url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Paddy / Rice', url: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Sugarcane', url: 'https://images.unsplash.com/photo-1594951478522-a9b8304033ec?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Cotton', url: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Maize', url: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80' }
+                  ].map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => setCropImageUrl(preset.url)}
+                      className={`shrink-0 flex items-center space-x-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition ${
+                        cropImageUrl === preset.url ? 'bg-emerald-800 text-white border-emerald-900' : 'bg-slate-50 text-gray-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <img src={preset.url} alt={preset.name} className="w-4 h-4 rounded object-cover" />
+                      <span>{preset.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

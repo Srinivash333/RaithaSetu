@@ -1,4 +1,4 @@
-const { rankWorkersForJob, estimateWage } = require('../services/recommendationEngine');
+const { rankWorkersForJob, rankWorkersForCriteria, estimateWage } = require('../services/recommendationEngine');
 
 exports.getWorkerRecommendations = async (req, res) => {
   try {
@@ -19,9 +19,17 @@ exports.getWorkerRecommendations = async (req, res) => {
 exports.getWageEstimate = async (req, res) => {
   try {
     const estimate = estimateWage(req.body);
+    let availableWorkers = [];
+    try {
+      availableWorkers = await rankWorkersForCriteria(req.body);
+    } catch (err) {
+      console.warn('Worker ranking for criteria warning:', err.message);
+    }
+
     res.status(200).json({
       success: true,
-      estimate
+      estimate,
+      availableWorkers
     });
   } catch (error) {
     console.error('Wage Estimate Error:', error);

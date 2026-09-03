@@ -106,7 +106,8 @@ exports.rankWorkersForJob = async (jobId, options = {}) => {
       worker: {
         _id: workerUser._id,
         name: workerUser.name,
-        phone: workerUser.phone,
+        phone: workerUser.phone || workerUser.mobileNumber,
+        mobileNumber: workerUser.mobileNumber || workerUser.phone,
         email: workerUser.email,
         address: workerUser.address,
         avatar: workerUser.avatar
@@ -140,6 +141,91 @@ exports.rankWorkersForJob = async (jobId, options = {}) => {
   return rankedWorkers;
 };
 
+// Rank available workers for general criteria (crop, workType, duration, location)
+exports.rankWorkersForCriteria = async (criteria = {}) => {
+  const { crop, workType, duration, location, farmerCoordinates } = criteria;
+
+  const baseCoords = farmerCoordinates || (location?.coordinates) || [76.8973, 12.5218]; // Default Mandya coordinates
+
+  const workerProfiles = await WorkerProfile.find({ isAvailable: true }).populate('userId');
+
+  const rankedWorkers = workerProfiles.map(profile => {
+    const workerUser = profile.userId;
+    if (!workerUser) return null;
+
+    const workerCoords = workerUser.location?.coordinates || [77.5946, 12.9716];
+    const distanceKm = calculateDistanceKm(baseCoords, workerCoords);
+
+    let distanceScore = 0;
+    if (distanceKm <= 5) distanceScore = 100;
+    else if (distanceKm <= 10) distanceScore = 85;
+    else if (distanceKm <= 20) distanceScore = 70;
+    else if (distanceKm <= 35) distanceScore = 50;
+    else distanceScore = 20;
+
+    const skills = profile.skills || [];
+    let skillScore = 70;
+    if (workType) {
+      const wtLower = workType.toLowerCase();
+      const cropLower = (crop || '').toLowerCase();
+      const hasWorkTypeSkill = skills.some(s => s.toLowerCase().includes(wtLower) || wtLower.includes(s.toLowerCase()));
+      const hasCropSkill = cropLower && skills.some(s => s.toLowerCase().includes(cropLower));
+
+      if (hasWorkTypeSkill && hasCropSkill) skillScore = 100;
+      else if (hasWorkTypeSkill || hasCropSkill) skillScore = 85;
+      else skillScore = 70;
+    }
+
+    const years = profile.experienceYears || 1;
+    const experienceScore = Math.min(100, years * 20);
+    const ratingScore = Math.round(((profile.ratingAverage || 4.5) / 5) * 100);
+
+    const totalScore = Math.round(
+      (skillScore * 0.35) +
+      (experienceScore * 0.20) +
+      (distanceScore * 0.25) +
+      (100 * 0.10) +
+      (ratingScore * 0.10)
+    );
+
+    const reasons = [];
+    if (skills.length > 0) {
+      reasons.push(`skilled in ${skills.slice(0, 3).join(', ')}`);
+    } else {
+      reasons.push(`experienced in ${workType || 'farm work'}`);
+    }
+    reasons.push(`located ${distanceKm} km away`);
+    reasons.push(`rated ${profile.ratingAverage || 4.5}/5 stars`);
+
+    return {
+      worker: {
+        _id: workerUser._id,
+        name: workerUser.name,
+        phone: workerUser.phone || workerUser.mobileNumber,
+        mobileNumber: workerUser.mobileNumber || workerUser.phone,
+        email: workerUser.email,
+        address: workerUser.address,
+        avatar: workerUser.avatar
+      },
+      profile: {
+        skills: profile.skills,
+        experienceYears: profile.experienceYears,
+        expectedWagePerDay: profile.expectedWagePerDay,
+        ratingAverage: profile.ratingAverage,
+        completedJobsCount: profile.completedJobsCount,
+        isAvailable: profile.isAvailable,
+        gender: profile.gender || workerUser.gender || 'Unspecified'
+      },
+      matchPercentage: totalScore,
+      distanceKm,
+      explanation: `Recommended because this worker is ${reasons.join(', ')}.`
+    };
+  }).filter(Boolean);
+
+  rankedWorkers.sort((a, b) => b.matchPercentage - a.matchPercentage);
+  return rankedWorkers;
+};
+
 // Baseline AI wage estimation based on crop, work type, location, and skills
 exports.estimateWage = (params) => {
   const { crop, workType, duration, skillLevel, locationName } = params;
@@ -157,7 +243,7 @@ exports.estimateWage = (params) => {
     'General Labour': 600
   };
 
-  if (workTypeRates[workType]) {
+  if (workType && workTypeRates[workType]) {
     baseRate = workTypeRates[workType];
   }
 
@@ -167,21 +253,36 @@ exports.estimateWage = (params) => {
   }
 
   // Duration multiplier adjustment
-  let estimatedMin = Math.round(baseRate * 0.9);
-  let estimatedMax = Math.round(baseRate * 1.15);
-  let suggested = Math.round(baseRate);
+  let recommendedWage = baseRate;
+  let unitLabel = '/ worker / day';
+  let durationPeriod = 'day';
 
-  let explanation = `Estimated fair market wage based on regional agricultural trends for ${workType || 'agricultural work'} in ${crop || 'general crops'}. Higher complexity tasks like pesticide application or specialty crop harvesting carry a premium.`;
+  if (duration === 'Hourly') {
+    recommendedWage = Math.round(baseRate / 8);
+    unitLabel = '/ worker / hour';
+    durationPeriod = 'hour';
+  } else if (duration === 'Weekly') {
+    recommendedWage = Math.round(baseRate * 6);
+    unitLabel = '/ worker / week';
+    durationPeriod = 'week';
+  }
+
+  const estimatedMin = Math.round(recommendedWage * 0.9);
+  const estimatedMax = Math.round(recommendedWage * 1.15);
+
+  let explanation = `Estimated fair market wage based on regional agricultural trends for ${workType || 'agricultural work'} in ${crop || 'general crops'}.`;
 
   return {
     crop: crop || 'General Crop',
     workType: workType || 'Daily Labour',
     duration: duration || 'Daily',
+    recommendedWage,
+    suggestedWage: recommendedWage, // backwards compatible
     minWage: estimatedMin,
     maxWage: estimatedMax,
-    suggestedWage: suggested,
     currency: 'INR',
-    unit: duration === 'Hourly' ? '/ hour' : '/ day',
+    unit: unitLabel,
+    durationPeriod,
     explanation
   };
 };

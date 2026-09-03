@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ShoppingBag, Building2, Send, ShieldCheck, AlertCircle } from 'lucide-react';
+import { generateTraderWhatsAppMessage, openWhatsAppChat } from '../utils/whatsappUtils';
 
 export default function CropOfferModal({
   isOpen,
@@ -65,6 +66,21 @@ export default function CropOfferModal({
     setSending(true);
 
     try {
+      const rawPhone = trader?.contactNumber || trader?.phone || trader?.mobileNumber || trader?.userId?.phone;
+      const traderNameStr = trader?.businessName || trader?.ownerName || trader?.name || 'Trader';
+
+      if (rawPhone) {
+        const waMsg = generateTraderWhatsAppMessage({
+          traderName: traderNameStr,
+          farmerOfferPrice: priceNum,
+          priceUnit: cropListing.unit || 'box',
+          quantity: qtyNum,
+          quantityUnit: cropListing.unit || 'box',
+          cropName: cropListing.cropName || 'Crop'
+        });
+        openWhatsAppChat(rawPhone, waMsg);
+      }
+
       const data = await api.createNegotiation(token, {
         cropListingId: cropListing._id,
         traderId: trader._id,
@@ -159,7 +175,7 @@ export default function CropOfferModal({
               onChange={(e) => setPricePerUnit(e.target.value)}
               className="w-full border border-gray-300 rounded-xl p-2.5 font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-emerald-900"
             />
-            <span className="text-[10px] text-gray-400 font-medium block mt-0.5">Asking: ₹{defaultPrice}</span>
+            <span className="text-[10px] text-gray-400 font-medium block mt-0.5 font-semibold">Asking: ₹{defaultPrice}</span>
           </div>
         </div>
 

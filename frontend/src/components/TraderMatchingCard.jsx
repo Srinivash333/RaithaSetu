@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import Rating from './Rating';
-import { MapPin, Sparkles, Phone, MessageSquare, Send, Building2, ShieldCheck, Tag } from 'lucide-react';
+import { MapPin, Sparkles, Phone, MessageSquare, Building2, ShieldCheck, MessageCircle } from 'lucide-react';
 import { translateCropList, translateCrop } from '../utils/cropTranslations';
+import { getDisplayPhone } from '../utils/whatsappUtils';
 
 export default function TraderMatchingCard({
   trader,
@@ -16,13 +17,15 @@ export default function TraderMatchingCard({
   offerSent = false
 }) {
   const { t, language } = useLanguage();
-  const businessName = trader.businessName || 'APMC Crop Buyer';
-  const ownerName = trader.ownerName || trader.name || 'APMC Buyer';
-  const phone = trader.contactNumber || trader.phone || '+91 9845012345';
-  const rating = trader.ratingAverage || 4.7;
-  const ratingCount = trader.ratingCount || 15;
-  const image = trader.businessImage || 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?auto=format&fit=crop&w=600&q=80';
-  const interestedCrops = trader.interestedCrops?.length ? trader.interestedCrops : ['Tomatoes', 'Paddy', 'Vegetables'];
+  const businessName = trader?.businessName || 'APMC Crop Buyer';
+  const ownerName = trader?.ownerName || trader?.name || 'APMC Buyer';
+  const rawPhone = trader?.contactNumber || trader?.phone || trader?.mobileNumber || trader?.userId?.phone;
+  const displayPhone = rawPhone ? getDisplayPhone(rawPhone) : '';
+
+  const rating = trader?.ratingAverage || 4.7;
+  const ratingCount = trader?.ratingCount || 15;
+  const image = trader?.businessImage || 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?auto=format&fit=crop&w=600&q=80';
+  const interestedCrops = trader?.interestedCrops?.length ? trader.interestedCrops : ['Tomatoes', 'Paddy', 'Vegetables'];
 
   const [imgErr, setImgErr] = useState(false);
 
@@ -39,7 +42,7 @@ export default function TraderMatchingCard({
     <div className="bg-white rounded-3xl border border-agri-200 p-5 shadow-sm hover:shadow-md transition space-y-4 relative overflow-hidden flex flex-col justify-between">
       
       <div className="space-y-3">
-        {/* HEADER: IMAGE, SHOP NAME, RATING & MATCH BADGE */}
+        {/* HEADER: IMAGE, SHOP NAME, RATING, PHONE & MATCH BADGE */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0 relative">
@@ -60,14 +63,32 @@ export default function TraderMatchingCard({
             <div>
               <h4 className="font-black text-sm text-gray-900 leading-snug">{businessName}</h4>
               <p className="text-[11px] text-gray-500 font-semibold">{ownerName}</p>
-              <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500 mt-0.5">
+
+              <div className="flex items-center space-x-1.5 text-xs text-gray-500 mt-0.5">
                 <Rating value={rating} />
-                <span className="text-[11px]">({ratingCount})</span>
+                <span className="text-[11px] font-semibold">({ratingCount})</span>
                 <span>•</span>
-                <span className="flex items-center text-emerald-800 font-bold text-[11px]">
-                  <MapPin className="w-3 h-3 mr-0.5 shrink-0" />
-                  {displayDistance}
-                </span>
+              </div>
+
+              {displayPhone ? (
+                <div className="pt-0.5">
+                  <div className="text-xs font-black text-gray-900 flex items-center space-x-1">
+                    <Phone className="w-3 h-3 text-emerald-700 shrink-0" />
+                    <span>{displayPhone}</span>
+                  </div>
+                  <span className="text-[9px] text-gray-400 font-medium block">
+                    Registered Mobile Number
+                  </span>
+                </div>
+              ) : (
+                <div className="pt-0.5">
+                  <span className="text-[11px] font-bold text-red-500">Phone number not available</span>
+                </div>
+              )}
+
+              <div className="flex items-center text-emerald-800 font-bold text-[11px] mt-1">
+                <MapPin className="w-3 h-3 mr-0.5 shrink-0" />
+                <span>{displayDistance}</span>
               </div>
             </div>
           </div>
@@ -108,51 +129,49 @@ export default function TraderMatchingCard({
         </div>
       </div>
 
-      {/* ACTION BUTTONS (4 ACTIONS) */}
-      <div className="pt-3 border-t border-agri-100 grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {/* VIEW TRADER SHOP */}
-        <button
-          type="button"
-          onClick={() => onViewShop && onViewShop(trader)}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1"
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          <span className="truncate">{t('farmer.viewShop') || 'View Shop'}</span>
-        </button>
+      {/* ACTION BUTTONS & FOOTNOTE */}
+      <div className="pt-3 border-t border-agri-100 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {/* VIEW TRADER SHOP */}
+          <button
+            type="button"
+            onClick={() => onViewShop && onViewShop(trader)}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center space-x-1.5"
+          >
+            <Building2 className="w-3.5 h-3.5 shrink-0" />
+            <span>{t('farmer.viewShop') || 'View Shop'}</span>
+          </button>
 
-        {/* ASK QUESTION */}
-        <button
-          type="button"
-          onClick={() => onAskQuestion && onAskQuestion(trader)}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1"
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span className="truncate">{t('farmer.askQuestion') || 'Ask Question'}</span>
-        </button>
+          {/* ASK QUESTION */}
+          <button
+            type="button"
+            onClick={() => onAskQuestion && onAskQuestion(trader)}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center space-x-1.5"
+          >
+            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+            <span>{t('farmer.askQuestion') || 'Ask Question'}</span>
+          </button>
 
-        {/* CONTACT TRADER */}
-        <a
-          href={`tel:${phone}`}
-          className="bg-slate-900 hover:bg-black text-white font-bold py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1 shadow-sm"
-        >
-          <Phone className="w-3.5 h-3.5" />
-          <span className="truncate">{t('farmer.contact') || 'Contact'}</span>
-        </a>
+          {/* SEND CROP OFFER VIA WHATSAPP */}
+          <button
+            type="button"
+            disabled={offerSent}
+            onClick={() => onSendCropOffer && onSendCropOffer(trader)}
+            className={`font-black py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-sm ${
+              offerSent
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
+                : 'bg-emerald-800 hover:bg-emerald-900 text-white'
+            }`}
+          >
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-300 fill-current shrink-0" />
+            <span>{offerSent ? (t('farmer.offerSentDone') || '✓ Offer Sent') : 'Send Offer via WhatsApp'}</span>
+          </button>
+        </div>
 
-        {/* SEND CROP OFFER */}
-        <button
-          type="button"
-          disabled={offerSent}
-          onClick={() => onSendCropOffer && onSendCropOffer(trader)}
-          className={`font-black py-2 rounded-xl text-xs transition flex items-center justify-center space-x-1 shadow-sm ${
-            offerSent
-              ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
-              : 'bg-emerald-700 hover:bg-emerald-800 text-white'
-          }`}
-        >
-          <Send className="w-3.5 h-3.5" />
-          <span className="truncate">{offerSent ? (t('farmer.offerSentDone') || '✓ Offer Sent') : (t('farmer.sendOffer') || 'Send Offer')}</span>
-        </button>
+        <div className="text-[10px] text-gray-400 font-medium flex items-center justify-center space-x-1 pt-0.5">
+          <ShieldCheck className="w-3 h-3 text-gray-400 shrink-0" />
+          <span>Opens WhatsApp with a pre-filled crop offer message to this trader.</span>
+        </div>
       </div>
 
     </div>

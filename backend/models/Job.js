@@ -72,7 +72,11 @@ const JobSchema = new mongoose.Schema({
     type: String,
     enum: ['ANY', 'MALE', 'FEMALE'],
     default: 'ANY'
-  }
+  },
+  selectedWorkerIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, { timestamps: true });
 
 JobSchema.index({ location: '2dsphere' });

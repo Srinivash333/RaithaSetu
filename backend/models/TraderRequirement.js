@@ -36,6 +36,10 @@ const TraderRequirementSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  imageUrl: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['active', 'fulfilled', 'closed'],

@@ -135,7 +135,10 @@ exports.updateApplicationStatus = async (req, res) => {
 
     const job = await Job.findById(application.jobId._id);
     if (status === 'accepted') {
-      if (!job.selectedWorkerIds.includes(application.workerId)) {
+      if (!Array.isArray(job.selectedWorkerIds)) {
+        job.selectedWorkerIds = [];
+      }
+      if (!job.selectedWorkerIds.some(wId => wId && wId.toString() === application.workerId.toString())) {
         job.selectedWorkerIds.push(application.workerId);
       }
       job.status = 'worker_selected';
@@ -264,11 +267,13 @@ exports.respondJobOffer = async (req, res) => {
     const targetStatus = (status || '').toLowerCase();
 
     if (targetStatus === 'accepted') {
-      const selectedWorkerIds = job.selectedWorkerIds || [];
-      const isAlreadySelected = selectedWorkerIds.some(wId => wId.toString() === req.user._id.toString());
+      if (!Array.isArray(job.selectedWorkerIds)) {
+        job.selectedWorkerIds = [];
+      }
+      const isAlreadySelected = job.selectedWorkerIds.some(wId => wId && wId.toString() === req.user._id.toString());
       
       const maxWorkers = job.workersNeeded || 1;
-      if (!isAlreadySelected && selectedWorkerIds.length >= maxWorkers) {
+      if (!isAlreadySelected && job.selectedWorkerIds.length >= maxWorkers) {
         return res.status(409).json({
           success: false,
           status: 409,

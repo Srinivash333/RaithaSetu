@@ -9,6 +9,7 @@ import Modal from '../components/Modal';
 import Button from '../components/Button';
 import NegotiationModal from '../components/NegotiationModal';
 import { api } from '../services/api';
+import { getPresetCropImage } from '../utils/cropTranslations';
 import { 
   ShoppingBag, CheckCircle, Store, Building2, MapPin, 
   TrendingUp, PackageCheck, Truck, ShieldCheck, Scale, 
@@ -43,6 +44,7 @@ export default function TraderDashboard() {
   const [reqPrice, setReqPrice] = useState(2400);
   const [reqLocation, setReqLocation] = useState(user?.address || 'Mandya APMC Yard');
   const [reqDescription, setReqDescription] = useState('Urgent wholesale procurement for mill dispatch.');
+  const [reqImageUrl, setReqImageUrl] = useState('');
   const [postingReq, setPostingReq] = useState(false);
 
   // Negotiation & Deal Modals
@@ -120,12 +122,14 @@ export default function TraderDashboard() {
         unit: reqUnit,
         offeredPricePerUnit: Number(reqPrice),
         preferredLocation: reqLocation.trim(),
-        description: reqDescription.trim()
+        description: reqDescription.trim(),
+        imageUrl: reqImageUrl.trim() || getPresetCropImage(reqCropName)
       });
 
       if (data.success) {
         setShowReqModal(false);
         setStatusSuccessMsg('Sourcing requirement posted successfully!');
+        setReqImageUrl('');
         fetchTraderData();
         setTimeout(() => setStatusSuccessMsg(''), 4000);
       }
@@ -398,17 +402,30 @@ export default function TraderDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {myRequirements.map((r) => (
                     <div key={r._id} className="bg-white p-5 rounded-3xl border border-agri-200 shadow-sm space-y-3 relative">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-950 px-2.5 py-0.5 rounded-md">
-                            ACTIVE REQUIREMENT
-                          </span>
-                          <h3 className="text-base font-black text-gray-900 mt-1">{r.cropName}</h3>
-                          <p className="text-xs font-bold text-gray-500">Variety: {r.variety}</p>
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center space-x-3">
+                          {/* SEED/CROP THUMBNAIL */}
+                          <div className="w-14 h-14 rounded-xl overflow-hidden bg-emerald-100 border border-emerald-200 shrink-0 relative shadow-xs">
+                            <img
+                              src={r.imageUrl || getPresetCropImage(r.cropName)}
+                              alt={r.cropName}
+                              onError={(e) => { e.target.src = getPresetCropImage(r.cropName); }}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-950 px-2.5 py-0.5 rounded-md">
+                              ACTIVE REQUIREMENT
+                            </span>
+                            <h3 className="text-base font-black text-gray-900 mt-1">{r.cropName}</h3>
+                            <p className="text-xs font-bold text-gray-500">Variety: {r.variety}</p>
+                          </div>
                         </div>
+
                         <button
                           onClick={() => handleDeleteRequirement(r._id)}
-                          className="text-red-500 hover:text-red-700 p-1"
+                          className="text-red-500 hover:text-red-700 p-1 shrink-0"
                           title="Delete Requirement"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -640,6 +657,44 @@ export default function TraderDashboard() {
                 placeholder="e.g. Mandya, Mysuru APMC Yard"
                 className="w-full border border-gray-300 rounded-xl p-2.5 font-semibold"
               />
+            </div>
+
+            <div>
+              <label className="block font-bold text-gray-700 mb-1">Crop / Seed Image URL (Optional)</label>
+              <input
+                type="url"
+                value={reqImageUrl}
+                onChange={(e) => setReqImageUrl(e.target.value)}
+                placeholder="e.g. https://images.unsplash.com/... (Or pick photo preset below)"
+                className="w-full border border-gray-300 rounded-xl p-2.5 font-medium text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+              
+              {/* PRESET CROP PHOTO PICKER */}
+              <div className="mt-2 space-y-1">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Or Pick a Seed / Crop Photo Preset:</span>
+                <div className="flex space-x-2 overflow-x-auto pb-1 pt-0.5">
+                  {[
+                    { name: 'Paddy / Seeds', url: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Tomatoes', url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Potato', url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Sugarcane', url: 'https://images.unsplash.com/photo-1594951478522-a9b8304033ec?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Cotton', url: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Maize / Corn', url: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80' }
+                  ].map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => setReqImageUrl(preset.url)}
+                      className={`shrink-0 flex items-center space-x-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition ${
+                        reqImageUrl === preset.url ? 'bg-emerald-800 text-white border-emerald-900' : 'bg-slate-50 text-gray-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <img src={preset.url} alt={preset.name} className="w-4 h-4 rounded object-cover" />
+                      <span>{preset.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>

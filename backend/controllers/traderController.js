@@ -37,21 +37,24 @@ exports.getAllTraders = async (req, res) => {
           };
         }
 
+        const registeredPhone = u.phone || u.mobileNumber || profile?.contactNumber || '';
         return {
           _id: u._id,
           userId: u._id,
           user: u,
-          businessName: profile.businessName || `${u.name} Traders`,
-          ownerName: profile.ownerName || u.name,
-          businessDescription: profile.businessDescription || 'Wholesale crop buyer.',
-          businessLocation: profile.businessLocation || u.address || 'Karnataka, India',
-          contactNumber: profile.contactNumber || u.phone || u.mobileNumber || '+91 9945001122',
-          businessType: profile.businessType || 'Wholesale Buyer',
-          openingHours: profile.openingHours || '7:00 AM - 7:00 PM',
-          businessStatus: profile.businessStatus || 'open',
-          businessImage: profile.businessImage || 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?auto=format&fit=crop&w=800&q=80',
-          interestedCrops: profile.interestedCrops || ['Paddy', 'Tomato'],
-          purchaseCapacity: profile.purchaseCapacity || 'High (50+ Quintals)'
+          businessName: profile?.businessName || `${u.name} Traders`,
+          ownerName: profile?.ownerName || u.name,
+          businessDescription: profile?.businessDescription || 'Wholesale crop buyer.',
+          businessLocation: profile?.businessLocation || u.address || 'Karnataka, India',
+          contactNumber: registeredPhone,
+          phone: registeredPhone,
+          mobileNumber: registeredPhone,
+          businessType: profile?.businessType || 'Wholesale Buyer',
+          openingHours: profile?.openingHours || '7:00 AM - 7:00 PM',
+          businessStatus: profile?.businessStatus || 'open',
+          businessImage: profile?.businessImage || 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?auto=format&fit=crop&w=800&q=80',
+          interestedCrops: profile?.interestedCrops || ['Paddy', 'Tomato'],
+          purchaseCapacity: profile?.purchaseCapacity || 'High (50+ Quintals)'
         };
       })
     );
@@ -228,7 +231,7 @@ exports.updateTraderProfile = async (req, res) => {
 // Create Trader Commodity Buying Requirement (Trader Only)
 exports.createRequirement = async (req, res) => {
   try {
-    const { cropName, variety, quantityNeeded, unit, offeredPricePerUnit, preferredLocation, description } = req.body;
+    const { cropName, variety, quantityNeeded, unit, offeredPricePerUnit, preferredLocation, description, imageUrl } = req.body;
 
     const requirement = await TraderRequirement.create({
       traderId: req.user._id,
@@ -239,6 +242,7 @@ exports.createRequirement = async (req, res) => {
       offeredPricePerUnit: Number(offeredPricePerUnit),
       preferredLocation: preferredLocation || req.user.address || 'Karnataka',
       description: description || '',
+      imageUrl: imageUrl || '',
       status: 'active'
     });
 
