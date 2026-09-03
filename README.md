@@ -9,7 +9,7 @@ The platform brings together agricultural workforce management, crop marketplace
 
 ## 🚀 Live Application
 
-- 🌐 **Live Website:** [https://raithasetu-frontend.onrender.com/](https://raithasetu-frontend.onrender.com/)
+- 🌐 **Live Website:** [https://raithasetu-frontend-new.onrender.com/farmer-dashboard](https://raithasetu-frontend-new.onrender.com/farmer-dashboard)
 - ⚙️ **Backend API:** [https://raithasetu.onrender.com/](https://raithasetu.onrender.com/)
 - 💻 **GitHub Repository:** [https://github.com/Srinivash333/RaithaSetu](https://github.com/Srinivash333/RaithaSetu)
 
@@ -217,7 +217,7 @@ The repository includes `.env.example` as a configuration reference. Never commi
 
 RaithaSetu is deployed using cloud services for the application and database.
 
-- **Frontend:** Render Static Site — [https://raithasetu-frontend.onrender.com/](https://raithasetu-frontend.onrender.com/)
+- **Frontend:** Render Static Site — [https://raithasetu-frontend-new.onrender.com/farmer-dashboard](https://raithasetu-frontend-new.onrender.com/farmer-dashboard)
 - **Backend:** Render Web Service — [https://raithasetu.onrender.com/](https://raithasetu.onrender.com/)
 - **Database:** MongoDB Atlas Cloud Cluster
 
