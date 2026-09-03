@@ -9,7 +9,7 @@ The platform brings together agricultural workforce management, crop marketplace
 
 ## 🚀 Live Application
 
-- 🌐 **Live Website:** [https://raithasetu-frontend-new.onrender.com/farmer-dashboard](https://raithasetu-frontend-new.onrender.com/farmer-dashboard)
+- 🌐 **Live Website:** [https://raithasetu-frontend-new.onrender.com/farmer-dashboard](https://raithasetu-frontend-new.onrender.com)
 - ⚙️ **Backend API:** [https://raithasetu.onrender.com/](https://raithasetu.onrender.com/)
 - 💻 **GitHub Repository:** [https://github.com/Srinivash333/RaithaSetu](https://github.com/Srinivash333/RaithaSetu)
 
