@@ -225,7 +225,7 @@ export default function TraderDashboard() {
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{businessName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-agri-900 tracking-tight">{businessName}</h1>
 
               <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-agri-200">
                 <span className="flex items-center">

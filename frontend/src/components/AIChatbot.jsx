@@ -64,9 +64,10 @@ export default function AIChatbot() {
     setLoading(true);
 
     try {
-      // Pass conversation history (excluding initial greeting)
+      // Pass recent conversation history (capped to last 4 messages for speed)
       const historyPayload = updatedMessages
         .slice(1)
+        .slice(-4)
         .map(m => ({ sender: m.sender, text: m.text }));
 
       const res = await api.chatAI(
