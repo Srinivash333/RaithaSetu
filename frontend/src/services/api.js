@@ -3,7 +3,7 @@
  * Handles fetch requests to backend endpoints with optional JWT auth tokens
  */
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const getHeaders = (token, extraHeaders = {}) => {
   const headers = {
